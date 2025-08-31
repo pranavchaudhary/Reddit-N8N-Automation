@@ -1,0 +1,558 @@
+{
+  "name": "Reddit Personal Finance",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 6
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        320,
+        144
+      ],
+      "id": "1719c730-7446-4d40-b6c4-330636813b24",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "resource": "webScrapper",
+        "operation": "triggerCollectionByUrl",
+        "dataset_id": {
+          "__rl": true,
+          "value": "gd_lvz8ah06191smkebj4",
+          "mode": "list",
+          "cachedResultName": "Reddit- Posts"
+        },
+        "urls": "={{ $json.data.toJsonString() }}",
+        "requestOptions": {}
+      },
+      "type": "@brightdata/n8n-nodes-brightdata.brightData",
+      "typeVersion": 1,
+      "position": [
+        1664,
+        144
+      ],
+      "id": "66d151da-6f2c-462d-a88b-7958a8463485",
+      "name": "Extract URLs",
+      "credentials": {
+        "brightdataApi": {
+          
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "89f947d9-eec7-44bd-8642-46c1923a207b",
+              "name": "url",
+              "value": "={{ $json.link }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1168,
+        160
+      ],
+      "id": "8a043e76-bb26-4dcd-983b-97c48d4651e5",
+      "name": "Extract URL"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1424,
+        160
+      ],
+      "id": "1359b5f2-1795-48ca-9413-463ea9f3fc06",
+      "name": "URL Aggregator"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "Check SnapShot Success",
+      "typeVersion": 1,
+      "position": [
+        2656,
+        224
+      ],
+      "id": "18110360-73e7-4d41-bea6-12510ff6b63a"
+    },
+    {
+      "parameters": {
+        "resource": "webScrapper",
+        "operation": "monitorProgressSnapshot",
+        "snapshot_id": "={{ $json.snapshot_id }}",
+        "requestOptions": {}
+      },
+      "type": "@brightdata/n8n-nodes-brightdata.brightData",
+      "typeVersion": 1,
+      "position": [
+        1968,
+        160
+      ],
+      "id": "c2d55e93-4095-4eec-aead-97de72425217",
+      "name": "Check the status of a batch extraction",
+      "credentials": {
+        "brightdataApi": {
+          
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6202665b-3aa3-4076-af33-8e6363bbce56",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "ready",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2176,
+        160
+      ],
+      "id": "390721e9-dff2-4535-a487-4fc98da4962e",
+      "name": "Is Batch Ready"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2352,
+        240
+      ],
+      "id": "7bcced1f-7e76-4c81-a262-d9f31198ed46",
+      "name": "Wait",
+      "webhookId": "ec113dcf-99e6-48e7-8e7d-45a9fb7f3025"
+    },
+    {
+      "parameters": {
+        "resource": "webScrapper",
+        "operation": "downloadSnapshot",
+        "snapshot_id": "={{ $json.snapshot_id }}",
+        "requestOptions": {}
+      },
+      "type": "@brightdata/n8n-nodes-brightdata.brightData",
+      "typeVersion": 1,
+      "position": [
+        2384,
+        64
+      ],
+      "id": "e90370c1-9bf7-489e-8f84-bf7bb3622f36",
+      "name": "Download the snapshot content",
+      "credentials": {
+        "brightdataApi": {
+          
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c462f13d-52b0-4f52-a783-d1478ea16bdf",
+              "name": "title",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "d7fc784c-a735-4fce-9174-51c16b3cc25b",
+              "name": "comments",
+              "value": "={{ $json.comments }}",
+              "type": "array"
+            },
+            {
+              "id": "556f3364-d080-4760-8764-5cbefc350957",
+              "name": "description",
+              "value": "={{ $json.description }}",
+              "type": "string"
+            },
+            {
+              "id": "29424b1b-c23a-4bf5-80e0-fe2273901e27",
+              "name": "num_comments",
+              "value": "={{ $json.num_comments }}",
+              "type": "number"
+            },
+            {
+              "id": "09cb33a3-5dfa-41ae-a09c-b746dc4e2549",
+              "name": "num_upvotes",
+              "value": "={{ $json.num_upvotes }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2592,
+        64
+      ],
+      "id": "1b33b741-a293-4b43-affd-4008c934c5e6",
+      "name": "Extract Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "57451b9b-4693-494d-b867-9230a4b49353",
+              "name": "postdata",
+              "value": "=Title: {{ $json.title }}\nDescription: {{ $json.description }}\nUpvoted: {{ $json.num_upvotes }}\nComment Count: {{ $json.num_comments }}\nComments: {{ $jmespath($json.comments, '[].{comment: comment, replies: replies[].reply}')?.toJsonString() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2800,
+        64
+      ],
+      "id": "12e9a0a2-e735-47f1-aa11-de25330061c5",
+      "name": "Reduce Step"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "postdata"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        3008,
+        64
+      ],
+      "id": "8ebfcf5d-d0fc-452a-b84c-0fa8f19aa5b3",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.postdata.join() }}",
+        "options": {
+          "systemMessage": "You are a helpful assistant.\nYou are Reddit Daily Digest AI, an assistant that takes a JSON array of Reddit posts (with fields such as Title, Description, Upvoted, Comment Count, and nested Comments/Replies) and produces a daily summary digest in email-friendly HTML format.\n\nInstructions\n\nInput Format:\nYou will always receive Reddit data as a JSON array where each item contains:\n\nTitle (string)\n\nDescription (string, may be empty)\n\nUpvoted (integer)\n\nComment Count (integer)\n\nComments (array of objects with \"comment\" and optional \"replies\")\n\nTask\n\nGenerate a clean, responsive HTML email body that highlights the most important, interesting, and discussed posts.\n\nEmail HTML Output Structure\n\nHeader Section"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        3216,
+        64
+      ],
+      "id": "1624512f-60b0-4bdb-a4fa-69d1ebe4e4bc",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        3136,
+        240
+      ],
+      "id": "cd8eefaf-0683-47e3-ae07-5074f92e5e90",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "chaudhary.pranav@gmail.com, sonalchoudhary72@gmail.com",
+        "subject": "=🚀 Daily Reddit Finance Summary - {{ new Date().toLocaleDateString('en-IN') }}",
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        3568,
+        64
+      ],
+      "id": "82650b57-2cb0-447f-b0ba-e983959616de",
+      "name": "Send a message",
+      "webhookId": "a0ece943-94d0-4b18-aef8-1a27333ff1cb",
+      "credentials": {
+        "gmailOAuth2": {
+          
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        912,
+        160
+      ],
+      "id": "ae9ab17f-4865-4592-a4c3-8945d5f131ba",
+      "name": "RSS Read1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst rssFeeds = [\n    { url: 'https://www.reddit.com/r/wallstreetbets.rss' }\n ];\nreturn rssFeeds;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        608,
+        128
+      ],
+      "id": "5f350edd-d28f-4300-8a85-eab4221d4773",
+      "name": "Code"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract URLs": {
+      "main": [
+        [
+          {
+            "node": "Check the status of a batch extraction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract URL": {
+      "main": [
+        [
+          {
+            "node": "URL Aggregator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "URL Aggregator": {
+      "main": [
+        [
+          {
+            "node": "Extract URLs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check SnapShot Success": {
+      "main": [
+        [
+          {
+            "node": "Check the status of a batch extraction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check the status of a batch extraction": {
+      "main": [
+        [
+          {
+            "node": "Is Batch Ready",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Batch Ready": {
+      "main": [
+        [
+          {
+            "node": "Download the snapshot content",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Check SnapShot Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download the snapshot content": {
+      "main": [
+        [
+          {
+            "node": "Extract Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Fields": {
+      "main": [
+        [
+          {
+            "node": "Reduce Step",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reduce Step": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Read1": {
+      "main": [
+        [
+          {
+            "node": "Extract URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "RSS Read1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "90e6dfb0-6e59-4fda-a39d-1b4340c03219",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "dba7effc81e9f321fc7532496482ba2d50a1ff47239fcc1f1b50229162871963"
+  },
+  "id": "JKGPfIzWg2VVDV7Z",
+  "tags": []
+}
